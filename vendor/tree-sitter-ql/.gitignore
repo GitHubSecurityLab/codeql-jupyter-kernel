@@ -1,0 +1,9 @@
+/node_modules/
+/yarn-error.log
+/binding.gyp
+/build
+test.ql
+.DS_Store
+package-lock.json
+target
+Cargo.lock

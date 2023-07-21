@@ -1,0 +1,25 @@
+{
+  "name": "jupyterlab-codeql-highlight",
+  "version": "0.0.1",
+  "description": "Jupyterlab extension to highlight CodeQL syntax",
+  "author": "Alvaro Munoz",
+  "main": "lib/plugin.js",
+  "keywords": [
+    "jupyter",
+    "jupyterlab",
+    "jupyterlab-extension"
+  ],
+  "license": "MIT",
+  "repository": {
+    "url": "git@github.com:github/jupyterlab-codeql-highlight.git",
+    "type": "git"
+  },
+  "jupyterlab": {
+    "extension": true
+  },
+  "scripts": {},
+  "dependencies": {
+    "@jupyterlab/codemirror": "*"
+  },
+  "devDependencies": {}
+}

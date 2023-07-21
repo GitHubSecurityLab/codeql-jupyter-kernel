@@ -1,0 +1,224 @@
+[2022-09-15 12:57:28] This is codeql database create db --language=python
+[2022-09-15 12:57:28] Log file was started late.
+[2022-09-15 12:57:28] [PROGRESS] database create> Initializing database at /Users/pwntester/seclab/projects/codeql_kernel/tests/db/db.
+[2022-09-15 12:57:28] Running plumbing command: codeql database init --language=python --source-root=/Users/pwntester/seclab/projects/codeql_kernel/tests/db --allow-missing-source-root=false --allow-already-existing -- /Users/pwntester/seclab/projects/codeql_kernel/tests/db/db
+[2022-09-15 12:57:28] [PROGRESS] database init> Counting lines of code in /Users/pwntester/seclab/projects/codeql_kernel/tests/db
+[2022-09-15 12:57:28] [PROGRESS] database init> Resolving extractor python.
+[2022-09-15 12:57:28] Calling plumbing command: codeql resolve languages --format=json
+[2022-09-15 12:57:28] [DETAILS] resolve languages> Scanning for [codeql-extractor.yml] from /Users/pwntester/.local/share/gh/extensions/gh-codeql/dist/release/v2.10.4/.codeqlmanifest.json
+[2022-09-15 12:57:28] [DETAILS] resolve languages> Parsing /Users/pwntester/.local/share/gh/extensions/gh-codeql/dist/release/v2.10.4/go/codeql-extractor.yml.
+[2022-09-15 12:57:28] [DETAILS] resolve languages> Parsing /Users/pwntester/.local/share/gh/extensions/gh-codeql/dist/release/v2.10.4/python/codeql-extractor.yml.
+[2022-09-15 12:57:28] [DETAILS] resolve languages> Parsing /Users/pwntester/.local/share/gh/extensions/gh-codeql/dist/release/v2.10.4/java/codeql-extractor.yml.
+[2022-09-15 12:57:28] [DETAILS] resolve languages> Parsing /Users/pwntester/.local/share/gh/extensions/gh-codeql/dist/release/v2.10.4/html/codeql-extractor.yml.
+[2022-09-15 12:57:28] [DETAILS] resolve languages> Parsing /Users/pwntester/.local/share/gh/extensions/gh-codeql/dist/release/v2.10.4/xml/codeql-extractor.yml.
+[2022-09-15 12:57:28] [DETAILS] resolve languages> Parsing /Users/pwntester/.local/share/gh/extensions/gh-codeql/dist/release/v2.10.4/properties/codeql-extractor.yml.
+[2022-09-15 12:57:28] [DETAILS] resolve languages> Parsing /Users/pwntester/.local/share/gh/extensions/gh-codeql/dist/release/v2.10.4/cpp/codeql-extractor.yml.
+[2022-09-15 12:57:28] [DETAILS] resolve languages> Parsing /Users/pwntester/.local/share/gh/extensions/gh-codeql/dist/release/v2.10.4/csv/codeql-extractor.yml.
+[2022-09-15 12:57:28] [DETAILS] resolve languages> Parsing /Users/pwntester/.local/share/gh/extensions/gh-codeql/dist/release/v2.10.4/csharp/codeql-extractor.yml.
+[2022-09-15 12:57:28] [DETAILS] resolve languages> Parsing /Users/pwntester/.local/share/gh/extensions/gh-codeql/dist/release/v2.10.4/javascript/codeql-extractor.yml.
+[2022-09-15 12:57:28] [DETAILS] resolve languages> Parsing /Users/pwntester/.local/share/gh/extensions/gh-codeql/dist/release/v2.10.4/ruby/codeql-extractor.yml.
+[2022-09-15 12:57:28] Plumbing command codeql resolve languages completed:
+                      {
+                        "extractors" : {
+                          "go" : [
+                            {
+                              "extractor_root" : "/Users/pwntester/.local/share/gh/extensions/gh-codeql/dist/release/v2.10.4/go"
+                            }
+                          ],
+                          "python" : [
+                            {
+                              "extractor_root" : "/Users/pwntester/.local/share/gh/extensions/gh-codeql/dist/release/v2.10.4/python"
+                            }
+                          ],
+                          "java" : [
+                            {
+                              "extractor_root" : "/Users/pwntester/.local/share/gh/extensions/gh-codeql/dist/release/v2.10.4/java",
+                              "extractor_options" : {
+                                "exclude" : {
+                                  "title" : "A glob excluding files from analysis.",
+                                  "description" : "A glob indicating what files to exclude from the analysis.\n",
+                                  "type" : "string"
+                                }
+                              }
+                            }
+                          ],
+                          "html" : [
+                            {
+                              "extractor_root" : "/Users/pwntester/.local/share/gh/extensions/gh-codeql/dist/release/v2.10.4/html"
+                            }
+                          ],
+                          "xml" : [
+                            {
+                              "extractor_root" : "/Users/pwntester/.local/share/gh/extensions/gh-codeql/dist/release/v2.10.4/xml"
+                            }
+                          ],
+                          "properties" : [
+                            {
+                              "extractor_root" : "/Users/pwntester/.local/share/gh/extensions/gh-codeql/dist/release/v2.10.4/properties"
+                            }
+                          ],
+                          "cpp" : [
+                            {
+                              "extractor_root" : "/Users/pwntester/.local/share/gh/extensions/gh-codeql/dist/release/v2.10.4/cpp"
+                            }
+                          ],
+                          "csv" : [
+                            {
+                              "extractor_root" : "/Users/pwntester/.local/share/gh/extensions/gh-codeql/dist/release/v2.10.4/csv"
+                            }
+                          ],
+                          "csharp" : [
+                            {
+                              "extractor_root" : "/Users/pwntester/.local/share/gh/extensions/gh-codeql/dist/release/v2.10.4/csharp",
+                              "extractor_options" : {
+                                "trap" : {
+                                  "title" : "Options pertaining to TRAP.",
+                                  "description" : "Options pertaining to TRAP.",
+                                  "type" : "object",
+                                  "properties" : {
+                                    "compression" : {
+                                      "title" : "Controls compression for the TRAP files written by the extractor.",
+                                      "description" : "This option is only intended for use in debugging the extractor. Accepted values are 'brotli' (the default, to write brotli-compressed TRAP), 'gzip', and 'none' (to write uncompressed TRAP).\n",
+                                      "type" : "string",
+                                      "pattern" : "^(none|gzip|brotli)$"
+                                    }
+                                  }
+                                },
+                                "buildless" : {
+                                  "title" : "Whether to use buildless (standalone) extraction.",
+                                  "description" : "A value indicating, which type of extraction the autobuilder should perform. If 'true', then the standalone extractor will be used, otherwise tracing extraction will be performed. The default is 'false'. Note that buildless extraction will generally yield less accurate analysis results, and should only be used in cases where it is not possible to build the code (for example if it uses inaccessible dependencies).\n",
+                                  "type" : "string",
+                                  "pattern" : "^(false|true)$"
+                                }
+                              }
+                            }
+                          ],
+                          "javascript" : [
+                            {
+                              "extractor_root" : "/Users/pwntester/.local/share/gh/extensions/gh-codeql/dist/release/v2.10.4/javascript",
+                              "extractor_options" : { }
+                            }
+                          ],
+                          "ruby" : [
+                            {
+                              "extractor_root" : "/Users/pwntester/.local/share/gh/extensions/gh-codeql/dist/release/v2.10.4/ruby"
+                            }
+                          ]
+                        }
+                      }
+[2022-09-15 12:57:28] [DETAILS] database init> Found candidate extractor root for python: /Users/pwntester/.local/share/gh/extensions/gh-codeql/dist/release/v2.10.4/python.
+[2022-09-15 12:57:28] [PROGRESS] database init> Successfully loaded extractor Python (python) from /Users/pwntester/.local/share/gh/extensions/gh-codeql/dist/release/v2.10.4/python.
+[2022-09-15 12:57:28] [PROGRESS] database init> Created skeleton CodeQL database at /Users/pwntester/seclab/projects/codeql_kernel/tests/db/db. This in-progress database is ready to be populated by an extractor.
+[2022-09-15 12:57:28] Plumbing command codeql database init completed.
+[2022-09-15 12:57:28] [PROGRESS] database create> Running build command: []
+[2022-09-15 12:57:28] Running plumbing command: codeql database trace-command --working-dir=/Users/pwntester/seclab/projects/codeql_kernel/tests/db --index-traceless-dbs --no-db-cluster -- /Users/pwntester/seclab/projects/codeql_kernel/tests/db/db
+[2022-09-15 12:57:28] Using autobuild script /Users/pwntester/.local/share/gh/extensions/gh-codeql/dist/release/v2.10.4/python/tools/autobuild.sh.
+[2022-09-15 12:57:28] [PROGRESS] database trace-command> Running command in /Users/pwntester/seclab/projects/codeql_kernel/tests/db: [/Users/pwntester/.local/share/gh/extensions/gh-codeql/dist/release/v2.10.4/python/tools/autobuild.sh]
+[2022-09-15 12:57:29] [build-stdout] No directories containing root identifiers were found. Returning working directory as root.
+[2022-09-15 12:57:29] [build-stdout] Will try to guess Python version, as it was not specified in `lgtm.yml`
+[2022-09-15 12:57:29] [build-stdout] Trying to guess Python version based on Trove classifiers in setup.py
+[2022-09-15 12:57:29] [build-stdout] Did not find setup.py (expected it to be at /Users/pwntester/seclab/projects/codeql_kernel/tests/db/setup.py)
+[2022-09-15 12:57:29] [build-stdout] Trying to guess Python version based on travis file
+[2022-09-15 12:57:29] [build-stdout] Did not find any travis files (expected them at either ['/Users/pwntester/seclab/projects/codeql_kernel/tests/db/.travis.yml', '/Users/pwntester/seclab/projects/codeql_kernel/tests/db/travis.yml'])
+[2022-09-15 12:57:29] [build-stdout] Trying to guess Python version based on installed versions
+[2022-09-15 12:57:29] [build-stdout] Only Python 3 installed -- will use that version
+[2022-09-15 12:57:29] [build-stdout] Calling python3 /Users/pwntester/.local/share/gh/extensions/gh-codeql/dist/release/v2.10.4/python/tools/get_venv_lib.py
+[2022-09-15 12:57:29] [build-stdout] Calling python3 -S /Users/pwntester/.local/share/gh/extensions/gh-codeql/dist/release/v2.10.4/python/tools/python_tracer.py -v -z all -c /Users/pwntester/seclab/projects/codeql_kernel/tests/db/db/working/trap_cache -p /Users/pwntester/.pyenv/versions/3.8.9/lib/python3.8/site-packages -R /Users/pwntester/seclab/projects/codeql_kernel/tests/db
+[2022-09-15 12:57:30] [build-stdout] [INFO] Python version 3.8.9
+[2022-09-15 12:57:30] [build-stdout] [INFO] Python extractor version 5.26
+[2022-09-15 12:57:30] [build-stdout] [INFO] [2] Extracted file /Users/pwntester/seclab/projects/codeql_kernel/tests/db/test.py in 13ms
+[2022-09-15 12:57:30] [build-stdout] [INFO] Processed 1 modules in 0.89s
+[2022-09-15 12:57:30] Plumbing command codeql database trace-command completed.
+[2022-09-15 12:57:30] [PROGRESS] database create> Finalizing database at /Users/pwntester/seclab/projects/codeql_kernel/tests/db/db.
+[2022-09-15 12:57:30] Running plumbing command: codeql database finalize --mode=normal --no-db-cluster -- /Users/pwntester/seclab/projects/codeql_kernel/tests/db/db
+[2022-09-15 12:57:30] [PROGRESS] database finalize> Running TRAP import for CodeQL database at /Users/pwntester/seclab/projects/codeql_kernel/tests/db/db...
+[2022-09-15 12:57:30] Running plumbing command: codeql dataset import --dbscheme=/Users/pwntester/.local/share/gh/extensions/gh-codeql/dist/release/v2.10.4/python/semmlecode.python.dbscheme -- /Users/pwntester/seclab/projects/codeql_kernel/tests/db/db/db-python /Users/pwntester/seclab/projects/codeql_kernel/tests/db/db/trap/python
+[2022-09-15 12:57:30] Clearing disk cache since the version file /Users/pwntester/seclab/projects/codeql_kernel/tests/db/db/db-python/default/cache/version does not exist
+[2022-09-15 12:57:31] Tuple pool not found. Clearing relations with cached strings
+[2022-09-15 12:57:31] Trimming disk cache at /Users/pwntester/seclab/projects/codeql_kernel/tests/db/db/db-python/default/cache in mode brutal.
+[2022-09-15 12:57:31] Sequence stamp origin is -6410326946580433135
+[2022-09-15 12:57:31] Pausing evaluation to hard-clear memory at sequence stamp o+0
+[2022-09-15 12:57:31] Unpausing evaluation
+[2022-09-15 12:57:31] Pausing evaluation to quickly trim disk at sequence stamp o+1
+[2022-09-15 12:57:31] Unpausing evaluation
+[2022-09-15 12:57:31] Pausing evaluation to zealously trim disk at sequence stamp o+2
+[2022-09-15 12:57:31] Unpausing evaluation
+[2022-09-15 12:57:31] Trimming completed (7ms): Purged everything.
+[2022-09-15 12:57:31] Scanning for files in /Users/pwntester/seclab/projects/codeql_kernel/tests/db/db/trap/python
+[2022-09-15 12:57:31] Importing $files.OZyQknAD1IulFpr2e2BosK_k2XY=.trap.gz (1 of 5)
+[2022-09-15 12:57:31] Importing $interpreter3.QEiLGctuGWr4vzU46fFtViMx5Zk=.trap.gz (2 of 5)
+[2022-09-15 12:57:31] Importing $stdlib_33.ip6WUkrM4k8dSaF7ltsHZhyHgaI=.trap (3 of 5)
+[2022-09-15 12:57:31] Importing sourceLocationPrefix.trap.gz (4 of 5)
+[2022-09-15 12:57:31] Importing test.py.VG30JwK_wgMeuAJ2hrw-efO5E0w=.trap.gz (5 of 5)
+[2022-09-15 12:57:31] Merging 1 fragment for files.
+[2022-09-15 12:57:31] Merging 1 fragment for folders.
+[2022-09-15 12:57:31] Merging 1 fragment for containerparent.
+[2022-09-15 12:57:31] Merging 1 fragment for py_flags_versioned.
+[2022-09-15 12:57:31] Merging 1 fragment for py_cobjects.
+[2022-09-15 12:57:31] Merging 1 fragment for py_cobjecttypes.
+[2022-09-15 12:57:31] Merging 1 fragment for py_cobject_sources.
+[2022-09-15 12:57:31] Merging 1 fragment for py_cobjectnames.
+[2022-09-15 12:57:31] Merging 1 fragment for py_cmembers_versioned.
+[2022-09-15 12:57:31] Merging 1 fragment for py_special_objects.
+[2022-09-15 12:57:31] Merging 1 fragment for py_citems.
+[2022-09-15 12:57:31] Merging 1 fragment for ext_rettype.
+[2022-09-15 12:57:31] Merging 1 fragment for ext_argtype.
+[2022-09-15 12:57:31] Merging 1 fragment for ext_argreturn.
+[2022-09-15 12:57:31] Merging 1 fragment for ext_proptype.
+[2022-09-15 12:57:31] Merging 1 fragment for sourceLocationPrefix.
+[2022-09-15 12:57:31] Merging 1 fragment for py_Modules.
+[2022-09-15 12:57:31] Merging 1 fragment for py_module_path.
+[2022-09-15 12:57:31] Merging 1 fragment for variable.
+[2022-09-15 12:57:31] Merging 1 fragment for py_extracted_version.
+[2022-09-15 12:57:31] Merging 1 fragment for py_stmt_lists.
+[2022-09-15 12:57:31] Merging 1 fragment for py_stmts.
+[2022-09-15 12:57:31] Merging 1 fragment for py_scopes.
+[2022-09-15 12:57:31] Merging 1 fragment for py_exprs.
+[2022-09-15 12:57:31] Merging 1 fragment for py_variables.
+[2022-09-15 12:57:31] Merging 1 fragment for py_expr_contexts.
+[2022-09-15 12:57:31] Merging 1 fragment for py_expr_lists.
+[2022-09-15 12:57:31] Merging 1 fragment for py_strs.
+[2022-09-15 12:57:31] Merging 1 fragment for py_flow_bb_node.
+[2022-09-15 12:57:31] Merging 1 fragment for py_scope_flow.
+[2022-09-15 12:57:31] Merging 1 fragment for py_successors.
+[2022-09-15 12:57:31] Merging 1 fragment for py_idoms.
+[2022-09-15 12:57:31] Merging 1 fragment for py_ssa_var.
+[2022-09-15 12:57:31] Merging 1 fragment for py_ssa_use.
+[2022-09-15 12:57:31] Merging 1 fragment for locations_ast.
+[2022-09-15 12:57:31] Merging 1 fragment for py_scope_location.
+[2022-09-15 12:57:31] Merging 1 fragment for py_codelines.
+[2022-09-15 12:57:31] Merging 1 fragment for py_commentlines.
+[2022-09-15 12:57:31] Merging 1 fragment for py_docstringlines.
+[2022-09-15 12:57:31] Merging 1 fragment for py_alllines.
+[2022-09-15 12:57:31] Merging 1 fragment for numlines.
+[2022-09-15 12:57:31] Merging 1 fragment for py_locations.
+[2022-09-15 12:57:31] Saving string and id pools to disk.
+[2022-09-15 12:57:31] Finished importing trap files.
+[2022-09-15 12:57:31] Pausing evaluation to close the cache at sequence stamp o+3
+[2022-09-15 12:57:31] The disk cache is freshly trimmed; leave it be.
+[2022-09-15 12:57:31] Unpausing evaluation
+[2022-09-15 12:57:31] Plumbing command codeql dataset import completed.
+[2022-09-15 12:57:31] [PROGRESS] database finalize> TRAP import complete (652ms).
+[2022-09-15 12:57:31] Running plumbing command: codeql database cleanup --mode=normal -- /Users/pwntester/seclab/projects/codeql_kernel/tests/db/db
+[2022-09-15 12:57:31] [PROGRESS] database cleanup> Cleaning up existing TRAP files after import...
+[2022-09-15 12:57:31] [PROGRESS] database cleanup> TRAP files cleaned up (1ms).
+[2022-09-15 12:57:31] [PROGRESS] database cleanup> Cleaning up scratch directory...
+[2022-09-15 12:57:31] [PROGRESS] database cleanup> Scratch directory cleaned up (1ms).
+[2022-09-15 12:57:31] Running plumbing command: codeql dataset cleanup --mode=normal -- /Users/pwntester/seclab/projects/codeql_kernel/tests/db/db/db-python
+[2022-09-15 12:57:31] [PROGRESS] dataset cleanup> Cleaning up dataset in /Users/pwntester/seclab/projects/codeql_kernel/tests/db/db/db-python.
+[2022-09-15 12:57:31] Trimming disk cache at /Users/pwntester/seclab/projects/codeql_kernel/tests/db/db/db-python/default/cache in mode normal.
+[2022-09-15 12:57:31] Sequence stamp origin is -6410326944120915818
+[2022-09-15 12:57:31] Pausing evaluation to zealously trim disk at sequence stamp o+0
+[2022-09-15 12:57:31] Unpausing evaluation
+[2022-09-15 12:57:31] Trimming completed (2ms): Trimmed disposable data from cache.
+[2022-09-15 12:57:31] Pausing evaluation to close the cache at sequence stamp o+1
+[2022-09-15 12:57:31] The disk cache is freshly trimmed; leave it be.
+[2022-09-15 12:57:31] Unpausing evaluation
+[2022-09-15 12:57:31] [PROGRESS] dataset cleanup> Trimmed disposable data from cache.
+[2022-09-15 12:57:31] [PROGRESS] dataset cleanup> Finalizing dataset in /Users/pwntester/seclab/projects/codeql_kernel/tests/db/db/db-python
+[2022-09-15 12:57:31] [DETAILS] dataset cleanup> Finished deleting ID pool from /Users/pwntester/seclab/projects/codeql_kernel/tests/db/db/db-python (2ms).
+[2022-09-15 12:57:31] Plumbing command codeql dataset cleanup completed.
+[2022-09-15 12:57:31] Plumbing command codeql database cleanup completed with status 0.
+[2022-09-15 12:57:31] Plumbing command codeql database finalize completed.
+[2022-09-15 12:57:31] [PROGRESS] database create> Successfully created database at /Users/pwntester/seclab/projects/codeql_kernel/tests/db/db.
+[2022-09-15 12:57:31] Terminating normally.

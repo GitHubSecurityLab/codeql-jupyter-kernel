@@ -1,0 +1,1021 @@
+// Copyright (c) Jupyter Development Team.
+// Distributed under the terms of the Modified BSD License.
+import { nullTranslator } from '@jupyterlab/translation';
+import { Button, circleEmptyIcon, circleIcon, classes, ellipsesIcon, LabIcon, offlineBoltIcon, refreshIcon, stopIcon } from '@jupyterlab/ui-components';
+import { find, map, some } from '@lumino/algorithm';
+import { CommandRegistry } from '@lumino/commands';
+import { MessageLoop } from '@lumino/messaging';
+import { AttachedProperty } from '@lumino/properties';
+import { PanelLayout, Widget } from '@lumino/widgets';
+import * as React from 'react';
+import { sessionContextDialogs } from '../sessioncontext';
+import { translateKernelStatuses } from '../kernelstatuses';
+import { ReactWidget, UseSignal } from '../vdom';
+import { Throttler } from '@lumino/polling';
+/**
+ * The class name added to toolbars.
+ */
+const TOOLBAR_CLASS = 'jp-Toolbar';
+/**
+ * Toolbar pop-up opener button name
+ */
+const TOOLBAR_OPENER_NAME = 'toolbar-popup-opener';
+/**
+ * The class name added to toolbar items.
+ */
+const TOOLBAR_ITEM_CLASS = 'jp-Toolbar-item';
+/**
+ * The class name added to toolbar kernel name text.
+ */
+const TOOLBAR_KERNEL_NAME_CLASS = 'jp-Toolbar-kernelName';
+/**
+ * The class name added to toolbar spacer.
+ */
+const TOOLBAR_SPACER_CLASS = 'jp-Toolbar-spacer';
+/**
+ * The class name added to toolbar kernel status icon.
+ */
+const TOOLBAR_KERNEL_STATUS_CLASS = 'jp-Toolbar-kernelStatus';
+/**
+ * A layout for toolbars.
+ *
+ * #### Notes
+ * This layout automatically collapses its height if there are no visible
+ * toolbar widgets, and expands to the standard toolbar height if there are
+ * visible toolbar widgets.
+ */
+class ToolbarLayout extends PanelLayout {
+    constructor() {
+        super(...arguments);
+        this._dirty = false;
+    }
+    /**
+     * A message handler invoked on a `'fit-request'` message.
+     *
+     * If any child widget is visible, expand the toolbar height to the normal
+     * toolbar height.
+     */
+    onFitRequest(msg) {
+        super.onFitRequest(msg);
+        if (this.parent.isAttached) {
+            // If there are any widgets not explicitly hidden, expand the toolbar to
+            // accommodate them.
+            if (some(this.widgets, w => !w.isHidden)) {
+                this.parent.node.style.minHeight = 'var(--jp-private-toolbar-height)';
+                this.parent.removeClass('jp-Toolbar-micro');
+            }
+            else {
+                this.parent.node.style.minHeight = '';
+                this.parent.addClass('jp-Toolbar-micro');
+            }
+        }
+        // Set the dirty flag to ensure only a single update occurs.
+        this._dirty = true;
+        // Notify the ancestor that it should fit immediately. This may
+        // cause a resize of the parent, fulfilling the required update.
+        if (this.parent.parent) {
+            MessageLoop.sendMessage(this.parent.parent, Widget.Msg.FitRequest);
+        }
+        // If the dirty flag is still set, the parent was not resized.
+        // Trigger the required update on the parent widget immediately.
+        if (this._dirty) {
+            MessageLoop.sendMessage(this.parent, Widget.Msg.UpdateRequest);
+        }
+    }
+    /**
+     * A message handler invoked on an `'update-request'` message.
+     */
+    onUpdateRequest(msg) {
+        super.onUpdateRequest(msg);
+        if (this.parent.isVisible) {
+            this._dirty = false;
+        }
+    }
+    /**
+     * A message handler invoked on a `'child-shown'` message.
+     */
+    onChildShown(msg) {
+        super.onChildShown(msg);
+        // Post a fit request for the parent widget.
+        this.parent.fit();
+    }
+    /**
+     * A message handler invoked on a `'child-hidden'` message.
+     */
+    onChildHidden(msg) {
+        super.onChildHidden(msg);
+        // Post a fit request for the parent widget.
+        this.parent.fit();
+    }
+    /**
+     * A message handler invoked on a `'before-attach'` message.
+     */
+    onBeforeAttach(msg) {
+        super.onBeforeAttach(msg);
+        // Post a fit request for the parent widget.
+        this.parent.fit();
+    }
+    /**
+     * Attach a widget to the parent's DOM node.
+     *
+     * @param index - The current index of the widget in the layout.
+     *
+     * @param widget - The widget to attach to the parent.
+     *
+     * #### Notes
+     * This is a reimplementation of the superclass method.
+     */
+    attachWidget(index, widget) {
+        super.attachWidget(index, widget);
+        // Post a fit request for the parent widget.
+        this.parent.fit();
+    }
+    /**
+     * Detach a widget from the parent's DOM node.
+     *
+     * @param index - The previous index of the widget in the layout.
+     *
+     * @param widget - The widget to detach from the parent.
+     *
+     * #### Notes
+     * This is a reimplementation of the superclass method.
+     */
+    detachWidget(index, widget) {
+        super.detachWidget(index, widget);
+        // Post a fit request for the parent widget.
+        this.parent.fit();
+    }
+}
+/**
+ * A class which provides a toolbar widget.
+ */
+export class Toolbar extends Widget {
+    /**
+     * Construct a new toolbar widget.
+     */
+    constructor(options = {}) {
+        var _a;
+        super();
+        this.addClass(TOOLBAR_CLASS);
+        this.layout = (_a = options.layout) !== null && _a !== void 0 ? _a : new ToolbarLayout();
+    }
+    /**
+     * Get an iterator over the ordered toolbar item names.
+     *
+     * @returns An iterator over the toolbar item names.
+     */
+    names() {
+        const layout = this.layout;
+        return map(layout.widgets, widget => {
+            return Private.nameProperty.get(widget);
+        });
+    }
+    /**
+     * Add an item to the end of the toolbar.
+     *
+     * @param name - The name of the widget to add to the toolbar.
+     *
+     * @param widget - The widget to add to the toolbar.
+     *
+     * @param index - The optional name of the item to insert after.
+     *
+     * @returns Whether the item was added to toolbar.  Returns false if
+     *   an item of the same name is already in the toolbar.
+     *
+     * #### Notes
+     * The item can be removed from the toolbar by setting its parent to `null`.
+     */
+    addItem(name, widget) {
+        const layout = this.layout;
+        return this.insertItem(layout.widgets.length, name, widget);
+    }
+    /**
+     * Insert an item into the toolbar at the specified index.
+     *
+     * @param index - The index at which to insert the item.
+     *
+     * @param name - The name of the item.
+     *
+     * @param widget - The widget to add.
+     *
+     * @returns Whether the item was added to the toolbar. Returns false if
+     *   an item of the same name is already in the toolbar.
+     *
+     * #### Notes
+     * The index will be clamped to the bounds of the items.
+     * The item can be removed from the toolbar by setting its parent to `null`.
+     */
+    insertItem(index, name, widget) {
+        const existing = find(this.names(), value => value === name);
+        if (existing) {
+            return false;
+        }
+        widget.addClass(TOOLBAR_ITEM_CLASS);
+        const layout = this.layout;
+        const j = Math.max(0, Math.min(index, layout.widgets.length));
+        layout.insertWidget(j, widget);
+        Private.nameProperty.set(widget, name);
+        return true;
+    }
+    /**
+     * Insert an item into the toolbar at the after a target item.
+     *
+     * @param at - The target item to insert after.
+     *
+     * @param name - The name of the item.
+     *
+     * @param widget - The widget to add.
+     *
+     * @returns Whether the item was added to the toolbar. Returns false if
+     *   an item of the same name is already in the toolbar.
+     *
+     * #### Notes
+     * The index will be clamped to the bounds of the items.
+     * The item can be removed from the toolbar by setting its parent to `null`.
+     */
+    insertAfter(at, name, widget) {
+        return this._insertRelative(at, 1, name, widget);
+    }
+    /**
+     * Insert an item into the toolbar at the before a target item.
+     *
+     * @param at - The target item to insert before.
+     *
+     * @param name - The name of the item.
+     *
+     * @param widget - The widget to add.
+     *
+     * @returns Whether the item was added to the toolbar. Returns false if
+     *   an item of the same name is already in the toolbar.
+     *
+     * #### Notes
+     * The index will be clamped to the bounds of the items.
+     * The item can be removed from the toolbar by setting its parent to `null`.
+     */
+    insertBefore(at, name, widget) {
+        return this._insertRelative(at, 0, name, widget);
+    }
+    _insertRelative(at, offset, name, widget) {
+        const nameWithIndex = map(this.names(), (name, i) => {
+            return { name: name, index: i };
+        });
+        const target = find(nameWithIndex, x => x.name === at);
+        if (target) {
+            return this.insertItem(target.index + offset, name, widget);
+        }
+        return false;
+    }
+    /**
+     * Handle the DOM events for the widget.
+     *
+     * @param event - The DOM event sent to the widget.
+     *
+     * #### Notes
+     * This method implements the DOM `EventListener` interface and is
+     * called in response to events on the dock panel's node. It should
+     * not be called directly by user code.
+     */
+    handleEvent(event) {
+        switch (event.type) {
+            case 'click':
+                this.handleClick(event);
+                break;
+            default:
+                break;
+        }
+    }
+    /**
+     * Handle a DOM click event.
+     */
+    handleClick(event) {
+        // Stop propagating the click outside the toolbar
+        event.stopPropagation();
+        // Clicking a label focuses the corresponding control
+        // that is linked with `for` attribute, so let it be.
+        if (event.target instanceof HTMLLabelElement) {
+            const forId = event.target.getAttribute('for');
+            if (forId && this.node.querySelector(`#${forId}`)) {
+                return;
+            }
+        }
+        // If this click already focused a control, let it be.
+        if (this.node.contains(document.activeElement)) {
+            return;
+        }
+        // Otherwise, activate the parent widget, which may take focus if desired.
+        if (this.parent) {
+            this.parent.activate();
+        }
+    }
+    /**
+     * Handle `after-attach` messages for the widget.
+     */
+    onAfterAttach(msg) {
+        this.node.addEventListener('click', this);
+    }
+    /**
+     * Handle `before-detach` messages for the widget.
+     */
+    onBeforeDetach(msg) {
+        this.node.removeEventListener('click', this);
+    }
+}
+/**
+ * A class which provides a toolbar widget.
+ */
+export class ReactiveToolbar extends Toolbar {
+    /**
+     * Construct a new toolbar widget.
+     */
+    constructor() {
+        super();
+        this.popupOpener = new ToolbarPopupOpener();
+        this._widgetWidths = {};
+        this.insertItem(0, TOOLBAR_OPENER_NAME, this.popupOpener);
+        this.popupOpener.hide();
+        this._resizer = new Throttler(this._onResize.bind(this), 500);
+    }
+    /**
+     * Dispose of the widget and its descendant widgets.
+     */
+    dispose() {
+        if (this.isDisposed) {
+            return;
+        }
+        if (this._resizer) {
+            this._resizer.dispose();
+        }
+        super.dispose();
+    }
+    /**
+     * Insert an item into the toolbar at the after a target item.
+     *
+     * @param at - The target item to insert after.
+     *
+     * @param name - The name of the item.
+     *
+     * @param widget - The widget to add.
+     *
+     * @returns Whether the item was added to the toolbar. Returns false if
+     *   an item of the same name is already in the toolbar or if the target
+     *   is the toolbar pop-up opener.
+     *
+     * #### Notes
+     * The index will be clamped to the bounds of the items.
+     * The item can be removed from the toolbar by setting its parent to `null`.
+     */
+    insertAfter(at, name, widget) {
+        if (at === TOOLBAR_OPENER_NAME) {
+            return false;
+        }
+        return super.insertAfter(at, name, widget);
+    }
+    /**
+     * Insert an item into the toolbar at the specified index.
+     *
+     * @param index - The index at which to insert the item.
+     *
+     * @param name - The name of the item.
+     *
+     * @param widget - The widget to add.
+     *
+     * @returns Whether the item was added to the toolbar. Returns false if
+     *   an item of the same name is already in the toolbar.
+     *
+     * #### Notes
+     * The index will be clamped to the bounds of the items.
+     * The item can be removed from the toolbar by setting its parent to `null`.
+     */
+    insertItem(index, name, widget) {
+        if (widget instanceof ToolbarPopupOpener) {
+            return super.insertItem(index, name, widget);
+        }
+        else {
+            const j = Math.max(0, Math.min(index, this.layout.widgets.length - 1));
+            return super.insertItem(j, name, widget);
+        }
+    }
+    /**
+     * A message handler invoked on a `'before-hide'` message.
+     *
+     * It will hide the pop-up panel
+     */
+    onBeforeHide(msg) {
+        this.popupOpener.hidePopup();
+        super.onBeforeHide(msg);
+    }
+    onResize(msg) {
+        super.onResize(msg);
+        if (msg.width > 0 && this._resizer) {
+            void this._resizer.invoke();
+        }
+    }
+    _onResize() {
+        if (this.parent && this.parent.isAttached) {
+            const toolbarWidth = this.node.clientWidth;
+            const opener = this.popupOpener;
+            const openerWidth = 30;
+            const toolbarPadding = 2;
+            const layout = this.layout;
+            let width = opener.isHidden
+                ? toolbarPadding
+                : toolbarPadding + openerWidth;
+            let index = 0;
+            const widgetsToRemove = [];
+            const toIndex = layout.widgets.length - 1;
+            while (index < toIndex) {
+                const widget = layout.widgets[index];
+                this._saveWidgetWidth(widget);
+                width += this._getWidgetWidth(widget);
+                if (widgetsToRemove.length === 0 &&
+                    opener.isHidden &&
+                    width + openerWidth > toolbarWidth) {
+                    width += openerWidth;
+                }
+                if (width > toolbarWidth) {
+                    widgetsToRemove.push(widget);
+                }
+                index++;
+            }
+            while (widgetsToRemove.length > 0) {
+                const widget = widgetsToRemove.pop();
+                width -= this._getWidgetWidth(widget);
+                opener.addWidget(widget);
+            }
+            if (opener.widgetCount() > 0) {
+                const widgetsToAdd = [];
+                let index = 0;
+                let widget = opener.widgetAt(index);
+                const widgetCount = opener.widgetCount();
+                width += this._getWidgetWidth(widget);
+                if (widgetCount === 1 && width - openerWidth <= toolbarWidth) {
+                    width -= openerWidth;
+                }
+                while (width < toolbarWidth && index < widgetCount) {
+                    widgetsToAdd.push(widget);
+                    index++;
+                    widget = opener.widgetAt(index);
+                    if (widget) {
+                        width += this._getWidgetWidth(widget);
+                    }
+                    else {
+                        break;
+                    }
+                }
+                while (widgetsToAdd.length > 0) {
+                    const widget = widgetsToAdd.shift();
+                    this.addItem(Private.nameProperty.get(widget), widget);
+                }
+            }
+            if (opener.widgetCount() > 0) {
+                opener.updatePopup();
+                opener.show();
+            }
+            else {
+                opener.hide();
+            }
+        }
+    }
+    _saveWidgetWidth(widget) {
+        const widgetName = Private.nameProperty.get(widget);
+        this._widgetWidths[widgetName] = widget.hasClass(TOOLBAR_SPACER_CLASS)
+            ? 2
+            : widget.node.clientWidth;
+    }
+    _getWidgetWidth(widget) {
+        const widgetName = Private.nameProperty.get(widget);
+        return this._widgetWidths[widgetName];
+    }
+}
+/**
+ * The namespace for Toolbar class statics.
+ */
+(function (Toolbar) {
+    /**
+     * Create an interrupt toolbar item.
+     *
+     * @deprecated since version v3.2
+     * This is dead code now.
+     */
+    function createInterruptButton(sessionContext, translator) {
+        translator = translator || nullTranslator;
+        const trans = translator.load('jupyterlab');
+        return new ToolbarButton({
+            icon: stopIcon,
+            onClick: () => {
+                var _a, _b;
+                void ((_b = (_a = sessionContext.session) === null || _a === void 0 ? void 0 : _a.kernel) === null || _b === void 0 ? void 0 : _b.interrupt());
+            },
+            tooltip: trans.__('Interrupt the kernel')
+        });
+    }
+    Toolbar.createInterruptButton = createInterruptButton;
+    /**
+     * Create a restart toolbar item.
+     *
+     * @deprecated since v3.2
+     * This is dead code now.
+     */
+    function createRestartButton(sessionContext, dialogs, translator) {
+        translator = translator || nullTranslator;
+        const trans = translator.load('jupyterlab');
+        return new ToolbarButton({
+            icon: refreshIcon,
+            onClick: () => {
+                void (dialogs !== null && dialogs !== void 0 ? dialogs : sessionContextDialogs).restart(sessionContext, translator);
+            },
+            tooltip: trans.__('Restart the kernel')
+        });
+    }
+    Toolbar.createRestartButton = createRestartButton;
+    /**
+     * Create a toolbar spacer item.
+     *
+     * #### Notes
+     * It is a flex spacer that separates the left toolbar items
+     * from the right toolbar items.
+     */
+    function createSpacerItem() {
+        return new Private.Spacer();
+    }
+    Toolbar.createSpacerItem = createSpacerItem;
+    /**
+     * Create a kernel name indicator item.
+     *
+     * #### Notes
+     * It will display the `'display_name`' of the session context. It can
+     * handle a change in context or kernel.
+     */
+    function createKernelNameItem(sessionContext, dialogs, translator) {
+        const el = ReactWidget.create(React.createElement(Private.KernelNameComponent, { sessionContext: sessionContext, dialogs: dialogs !== null && dialogs !== void 0 ? dialogs : sessionContextDialogs, translator: translator }));
+        el.addClass('jp-KernelName');
+        return el;
+    }
+    Toolbar.createKernelNameItem = createKernelNameItem;
+    /**
+     * Create a kernel status indicator item.
+     *
+     * #### Notes
+     * It will show a busy status if the kernel status is busy.
+     * It will show the current status in the node title.
+     * It can handle a change to the context or the kernel.
+     */
+    function createKernelStatusItem(sessionContext, translator) {
+        return new Private.KernelStatus(sessionContext, translator);
+    }
+    Toolbar.createKernelStatusItem = createKernelStatusItem;
+})(Toolbar || (Toolbar = {}));
+/**
+ * React component for a toolbar button.
+ *
+ * @param props - The props for ToolbarButtonComponent.
+ */
+export function ToolbarButtonComponent(props) {
+    var _a, _b;
+    // In some browsers, a button click event moves the focus from the main
+    // content to the button (see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/button#Clicking_and_focus).
+    // We avoid a click event by calling preventDefault in mousedown, and
+    // we bind the button action to `mousedown`.
+    const handleMouseDown = (event) => {
+        var _a;
+        // Fire action only when left button is pressed.
+        if (event.button === 0) {
+            event.preventDefault();
+            (_a = props.onClick) === null || _a === void 0 ? void 0 : _a.call(props);
+        }
+    };
+    const handleKeyDown = (event) => {
+        var _a;
+        const { key } = event;
+        if (key === 'Enter' || key === ' ') {
+            (_a = props.onClick) === null || _a === void 0 ? void 0 : _a.call(props);
+        }
+    };
+    const handleClick = (event) => {
+        var _a;
+        if (event.button === 0) {
+            (_a = props.onClick) === null || _a === void 0 ? void 0 : _a.call(props);
+        }
+    };
+    const getTooltip = () => {
+        if (props.enabled === false && props.disabledTooltip) {
+            return props.disabledTooltip;
+        }
+        else if (props.pressed && props.pressedTooltip) {
+            return props.pressedTooltip;
+        }
+        else {
+            return props.tooltip || props.iconLabel;
+        }
+    };
+    return (React.createElement(Button, Object.assign({ className: props.className
+            ? props.className + ' jp-ToolbarButtonComponent'
+            : 'jp-ToolbarButtonComponent', "aria-pressed": props.pressed, "aria-disabled": props.enabled === false }, props.dataset, { disabled: props.enabled === false, onClick: ((_a = props.actualOnClick) !== null && _a !== void 0 ? _a : false) ? handleClick : undefined, onMouseDown: !((_b = props.actualOnClick) !== null && _b !== void 0 ? _b : false) ? handleMouseDown : undefined, onKeyDown: handleKeyDown, title: getTooltip(), minimal: true }),
+        (props.icon || props.iconClass) && (React.createElement(LabIcon.resolveReact, { icon: props.pressed ? props.pressedIcon : props.icon, iconClass: 
+            // add some extra classes for proper support of icons-as-css-background
+            classes(props.iconClass, 'jp-Icon'), className: "jp-ToolbarButtonComponent-icon", tag: "span", stylesheet: "toolbarButton" })),
+        props.label && (React.createElement("span", { className: "jp-ToolbarButtonComponent-label" }, props.label))));
+}
+/**
+ * Adds the toolbar button class to the toolbar widget.
+ * @param w Toolbar button widget.
+ */
+export function addToolbarButtonClass(w) {
+    w.addClass('jp-ToolbarButton');
+    return w;
+}
+/**
+ * Phosphor Widget version of static ToolbarButtonComponent.
+ */
+export class ToolbarButton extends ReactWidget {
+    /**
+     * Creates a toolbar button
+     * @param props props for underlying `ToolbarButton` component
+     */
+    constructor(props = {}) {
+        var _a, _b;
+        super();
+        this.props = props;
+        addToolbarButtonClass(this);
+        this._enabled = (_a = props.enabled) !== null && _a !== void 0 ? _a : true;
+        this._pressed = this._enabled && ((_b = props.pressed) !== null && _b !== void 0 ? _b : false);
+        this._onClick = props.onClick;
+    }
+    /**
+     * Sets the pressed state for the button
+     * @param value true if button is pressed, false otherwise
+     */
+    set pressed(value) {
+        if (this.enabled && value !== this._pressed) {
+            this._pressed = value;
+            this.update();
+        }
+    }
+    /**
+     * Returns true if button is pressed, false otherwise
+     */
+    get pressed() {
+        return this._pressed;
+    }
+    /**
+     * Sets the enabled state for the button
+     * @param value true to enable the button, false otherwise
+     */
+    set enabled(value) {
+        if (value != this._enabled) {
+            this._enabled = value;
+            if (!this._enabled) {
+                this._pressed = false;
+            }
+            this.update();
+        }
+    }
+    /**
+     * Returns true if button is enabled, false otherwise
+     */
+    get enabled() {
+        return this._enabled;
+    }
+    /**
+     * Sets the click handler for the button
+     * @param value click handler
+     */
+    set onClick(value) {
+        if (value !== this._onClick) {
+            this._onClick = value;
+            this.update();
+        }
+    }
+    /**
+     * Returns the click handler for the button
+     */
+    get onClick() {
+        return this._onClick;
+    }
+    render() {
+        return (React.createElement(ToolbarButtonComponent, Object.assign({}, this.props, { pressed: this.pressed, enabled: this.enabled, onClick: this.onClick })));
+    }
+}
+/**
+ * React component for a toolbar button that wraps a command.
+ *
+ * This wraps the ToolbarButtonComponent and watches the command registry
+ * for changes to the command.
+ */
+export function CommandToolbarButtonComponent(props) {
+    return (React.createElement(UseSignal, { signal: props.commands.commandChanged, shouldUpdate: (sender, args) => (args.id === props.id && args.type === 'changed') ||
+            args.type === 'many-changed' }, () => React.createElement(ToolbarButtonComponent, Object.assign({}, Private.propsFromCommand(props)))));
+}
+/*
+ * Adds the command toolbar button class to the command toolbar widget.
+ * @param w Command toolbar button widget.
+ */
+export function addCommandToolbarButtonClass(w) {
+    w.addClass('jp-CommandToolbarButton');
+    return w;
+}
+/**
+ * Phosphor Widget version of CommandToolbarButtonComponent.
+ */
+export class CommandToolbarButton extends ReactWidget {
+    /**
+     * Creates a command toolbar button
+     * @param props props for underlying `CommandToolbarButtonComponent` component
+     */
+    constructor(props) {
+        super();
+        this.props = props;
+        addCommandToolbarButtonClass(this);
+    }
+    render() {
+        return React.createElement(CommandToolbarButtonComponent, Object.assign({}, this.props));
+    }
+}
+/**
+ *  A class which provides a toolbar popup
+ *  used to store widgets that don't fit
+ *  in the toolbar when it is resized
+ */
+class ToolbarPopup extends Widget {
+    /**
+     *  Construct a new ToolbarPopup
+     */
+    constructor() {
+        super();
+        this.width = 0;
+        this.addClass('jp-Toolbar-responsive-popup');
+        this.layout = new PanelLayout();
+        Widget.attach(this, document.body);
+        this.hide();
+    }
+    /**
+     * Updates the width of the popup, this
+     * should match with the toolbar width
+     *
+     * @param width - The width to resize to
+     * @protected
+     */
+    updateWidth(width) {
+        if (width > 0) {
+            this.width = width;
+            this.node.style.width = `${width}px`;
+        }
+    }
+    /**
+     * Aligns the popup to left bottom of widget
+     *
+     * @param widget the widget to align to
+     * @private
+     */
+    alignTo(widget) {
+        const { height: widgetHeight, width: widgetWidth, x: widgetX, y: widgetY } = widget.node.getBoundingClientRect();
+        const width = this.width;
+        this.node.style.left = `${widgetX + widgetWidth - width + 1}px`;
+        this.node.style.top = `${widgetY + widgetHeight + 1}px`;
+    }
+    /**
+     * Inserts the widget at specified index
+     * @param index the index
+     * @param widget widget to add
+     */
+    insertWidget(index, widget) {
+        this.layout.insertWidget(0, widget);
+    }
+    /**
+     *  Total number of widgets in the popup
+     */
+    widgetCount() {
+        return this.layout.widgets.length;
+    }
+    /**
+     * Returns the widget at index
+     * @param index the index
+     */
+    widgetAt(index) {
+        return this.layout.widgets[index];
+    }
+}
+/**
+ *  A class that provides a ToolbarPopupOpener,
+ *  which is a button added to toolbar when
+ *  the toolbar items overflow toolbar width
+ */
+class ToolbarPopupOpener extends ToolbarButton {
+    /**
+     *  Create a new popup opener
+     */
+    constructor() {
+        super({
+            icon: ellipsesIcon,
+            onClick: () => {
+                this.handleClick();
+            }
+        });
+        this.addClass('jp-Toolbar-responsive-opener');
+        this.popup = new ToolbarPopup();
+    }
+    /**
+     * Add widget to the popup, prepends widgets
+     * @param widget the widget to add
+     */
+    addWidget(widget) {
+        this.popup.insertWidget(0, widget);
+    }
+    /**
+     * Dispose of the widget and its descendant widgets.
+     *
+     * #### Notes
+     * It is unsafe to use the widget after it has been disposed.
+     *
+     * All calls made to this method after the first are a no-op.
+     */
+    dispose() {
+        if (this.isDisposed) {
+            return;
+        }
+        this.popup.dispose();
+        super.dispose();
+    }
+    /**
+     * Hides the opener and the popup
+     */
+    hide() {
+        super.hide();
+        this.hidePopup();
+    }
+    /**
+     * Hides the popup
+     */
+    hidePopup() {
+        this.popup.hide();
+    }
+    /**
+     *  Updates width and position of the popup
+     *  to align with the toolbar
+     */
+    updatePopup() {
+        this.popup.updateWidth(this.parent.node.clientWidth);
+        this.popup.alignTo(this.parent);
+    }
+    /**
+     * Returns widget at index in the popup
+     * @param index
+     */
+    widgetAt(index) {
+        return this.popup.widgetAt(index);
+    }
+    /**
+     * Returns total number of widgets in the popup
+     *
+     * @returns Number of widgets
+     */
+    widgetCount() {
+        return this.popup.widgetCount();
+    }
+    handleClick() {
+        this.updatePopup();
+        this.popup.setHidden(!this.popup.isHidden);
+    }
+}
+/**
+ * A namespace for private data.
+ */
+var Private;
+(function (Private) {
+    function propsFromCommand(options) {
+        var _a, _b;
+        const { commands, id, args } = options;
+        const iconClass = commands.iconClass(id, args);
+        const iconLabel = commands.iconLabel(id, args);
+        // DEPRECATED: remove _icon when lumino 2.0 is adopted
+        // if icon is aliasing iconClass, don't use it
+        const _icon = (_a = options.icon) !== null && _a !== void 0 ? _a : commands.icon(id, args);
+        const icon = _icon === iconClass ? undefined : _icon;
+        const label = commands.label(id, args);
+        let className = commands.className(id, args);
+        // Add the boolean state classes.
+        if (commands.isToggled(id, args)) {
+            className += ' lm-mod-toggled';
+        }
+        if (!commands.isVisible(id, args)) {
+            className += ' lm-mod-hidden';
+        }
+        let tooltip = commands.caption(id, args) || options.label || label || iconLabel;
+        // Shows hot keys in tooltips
+        const binding = commands.keyBindings.find(b => b.command === id);
+        if (binding) {
+            const ks = CommandRegistry.formatKeystroke(binding.keys.join(' '));
+            tooltip = `${tooltip} (${ks})`;
+        }
+        const onClick = () => {
+            void commands.execute(id, args);
+        };
+        const enabled = commands.isEnabled(id, args);
+        return {
+            className,
+            dataset: { 'data-command': options.id },
+            icon,
+            iconClass,
+            tooltip,
+            onClick,
+            enabled,
+            label: (_b = options.label) !== null && _b !== void 0 ? _b : label
+        };
+    }
+    Private.propsFromCommand = propsFromCommand;
+    /**
+     * An attached property for the name of a toolbar item.
+     */
+    Private.nameProperty = new AttachedProperty({
+        name: 'name',
+        create: () => ''
+    });
+    /**
+     * A no-op function.
+     */
+    function noOp() {
+        /* no-op */
+    }
+    Private.noOp = noOp;
+    /**
+     * A spacer widget.
+     */
+    class Spacer extends Widget {
+        /**
+         * Construct a new spacer widget.
+         */
+        constructor() {
+            super();
+            this.addClass(TOOLBAR_SPACER_CLASS);
+        }
+    }
+    Private.Spacer = Spacer;
+    /**
+     * React component for a kernel name button.
+     *
+     * This wraps the ToolbarButtonComponent and watches the kernel
+     * session for changes.
+     */
+    function KernelNameComponent(props) {
+        const translator = props.translator || nullTranslator;
+        const trans = translator.load('jupyterlab');
+        const callback = () => {
+            void props.dialogs.selectKernel(props.sessionContext, translator);
+        };
+        return (React.createElement(UseSignal, { signal: props.sessionContext.kernelChanged, initialSender: props.sessionContext }, sessionContext => (React.createElement(ToolbarButtonComponent, { className: TOOLBAR_KERNEL_NAME_CLASS, onClick: callback, tooltip: trans.__('Switch kernel'), label: sessionContext === null || sessionContext === void 0 ? void 0 : sessionContext.kernelDisplayName }))));
+    }
+    Private.KernelNameComponent = KernelNameComponent;
+    /**
+     * A toolbar item that displays kernel status.
+     */
+    class KernelStatus extends Widget {
+        /**
+         * Construct a new kernel status widget.
+         */
+        constructor(sessionContext, translator) {
+            super();
+            this.translator = translator || nullTranslator;
+            this._trans = this.translator.load('jupyterlab');
+            this.addClass(TOOLBAR_KERNEL_STATUS_CLASS);
+            this._statusNames = translateKernelStatuses(this.translator);
+            this._onStatusChanged(sessionContext);
+            sessionContext.statusChanged.connect(this._onStatusChanged, this);
+            sessionContext.connectionStatusChanged.connect(this._onStatusChanged, this);
+        }
+        /**
+         * Handle a status on a kernel.
+         */
+        _onStatusChanged(sessionContext) {
+            if (this.isDisposed) {
+                return;
+            }
+            const status = sessionContext.kernelDisplayStatus;
+            const circleIconProps = {
+                container: this.node,
+                title: this._trans.__('Kernel %1', this._statusNames[status] || status),
+                stylesheet: 'toolbarButton',
+                alignSelf: 'normal',
+                height: '24px'
+            };
+            // set the icon
+            LabIcon.remove(this.node);
+            if (status === 'busy' ||
+                status === 'starting' ||
+                status === 'terminating' ||
+                status === 'restarting' ||
+                status === 'initializing') {
+                circleIcon.element(circleIconProps);
+            }
+            else if (status === 'connecting' ||
+                status === 'disconnected' ||
+                status === 'unknown') {
+                offlineBoltIcon.element(circleIconProps);
+            }
+            else {
+                circleEmptyIcon.element(circleIconProps);
+            }
+        }
+    }
+    Private.KernelStatus = KernelStatus;
+})(Private || (Private = {}));
+//# sourceMappingURL=widget.js.map

@@ -1,0 +1,45 @@
+{
+  "name": "tree-sitter-ql",
+  "version": "0.19.0",
+  "description": "tree-sitter grammar for Semmle QL",
+  "keywords": [
+    "tree-sitter",
+    "semmle-ql"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tree-sitter/tree-sitter-ql.git"
+  },
+  "author": "Sam Lanning <sam@samlanning.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "tree-sitter-cli": "^0.20.6"
+  },
+  "scripts": {
+    "tree-sitter": "tree-sitter",
+    "generate": "tree-sitter generate",
+    "test": "tree-sitter test",
+    "build": "tree-sitter generate && node-gyp build"
+  },
+  "tree-sitter": [
+    {
+      "file-types": [
+        "ql",
+        "qll"
+      ],
+      "scope": "source.ql"
+    }
+  ],
+  "dependencies": {
+    "nan": "^2.14.1"
+  },
+  "bugs": {
+    "url": "https://github.com/tree-sitter/tree-sitter-ql/issues"
+  },
+  "homepage": "https://github.com/tree-sitter/tree-sitter-ql#readme",
+  "main": "bindings/node",
+  "directories": {
+    "example": "examples",
+    "test": "test"
+  }
+}

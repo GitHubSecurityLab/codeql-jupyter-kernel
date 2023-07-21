@@ -1,0 +1,10 @@
+[2023-07-19 11:05:11] This is codeql database index-files --include-extension=.yaml --include-extension=.yml --size-limit=5m --language yaml -- /Users/pwntester/src/github.com/github/codeql-jupyter-kernel/example/codeql-db
+[2023-07-19 11:05:11] Log file was started late.
+[2023-07-19 11:05:11] Using index-files script /Users/pwntester/.local/share/nvim/mason/packages/codeql/codeql/yaml/tools/index-files.sh.
+[2023-07-19 11:05:11] [PROGRESS] database index-files> Scanning for files in /Users/pwntester/src/github.com/github/codeql-jupyter-kernel/example/src...
+[2023-07-19 11:05:11] Calling plumbing command: codeql resolve files --include-extension=.yaml --include-extension=.yml --size-limit=5m /Users/pwntester/src/github.com/github/codeql-jupyter-kernel/example/src --format=json
+[2023-07-19 11:05:11] [PROGRESS] resolve files> Scanning /Users/pwntester/src/github.com/github/codeql-jupyter-kernel/example/src...
+[2023-07-19 11:05:11] Plumbing command codeql resolve files completed:
+                      [ ]
+[2023-07-19 11:05:11] [DETAILS] database index-files> Found 0 files.
+[2023-07-19 11:05:11] Terminating normally.

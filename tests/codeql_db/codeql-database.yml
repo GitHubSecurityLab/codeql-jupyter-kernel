@@ -1,0 +1,9 @@
+---
+sourceLocationPrefix: "/Users/pwntester/seclab/projects/codeql_kernel/tests/db"
+baselineLinesOfCode: 1
+unicodeNewlines: false
+columnKind: "utf32"
+primaryLanguage: "python"
+creationMetadata:
+  cliVersion: "2.10.4"
+  creationTime: "2022-09-15T10:57:28.819536Z"

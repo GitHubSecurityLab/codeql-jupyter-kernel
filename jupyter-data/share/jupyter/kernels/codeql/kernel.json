@@ -1,0 +1,13 @@
+{
+  "argv": [
+    "python",
+    "-m",
+    "codeql_kernel",
+    "-f",
+    "{connection_file}"
+  ],
+  "display_name": "CodeQL",
+  "mimetype": "text/x-codeql",
+  "language": "codeql",
+  "name": "codeql"
+}

@@ -1,0 +1,10 @@
+---
+sourceLocationPrefix: /Users/pwntester/src/github.com/github/codeql-jupyter-kernel/example/src
+baselineLinesOfCode: 2
+unicodeNewlines: false
+columnKind: utf32
+primaryLanguage: python
+creationMetadata:
+  cliVersion: 2.13.4
+  creationTime: 2023-07-19T09:05:02.644931Z
+finalised: true
