@@ -7,8 +7,8 @@ data-files: clean
 	cp codeql_kernel/images/* jupyter-data/share/jupyter/kernels/codeql/
 
 install: data-files
-	python build_treesitter.py
-	pip install -e ".[test]"
+	python3 build_treesitter.py
+	pip3 install -e ".[test]"
 
 clean:
 	rm -rf jupyter-data
@@ -17,8 +17,8 @@ clean:
 
 
 build: data-files
-	pip install build twine
-	python -m build .
+	pip3 install build twine
+	python3 -m build .
 	twine check --strict dist/*
 
 test: clean
