@@ -6,7 +6,7 @@ build-backend = "hatchling.build"
 name = "codeql_kernel"
 description = "A Jupyter kernel for CodeQL"
 license = {file = "LICENSE.txt"}
-authors = [{name = "'Alvaro Munoz'", email = "alvaro@pwntester.com"}]
+authors = [{name = "'Alvaro Munoz'", email = "pwntester@github.com"}]
 classifiers = [
     "Intended Audience :: Science/Research",
     "License :: OSI Approved :: BSD License",
@@ -17,7 +17,7 @@ classifiers = [
     "Topic :: Software Development",
     "Topic :: System :: Shells",
 ]
-urls = {Homepage = "http://github.com/pwntester/codeql_kernel"}
+urls = {Homepage = "http://github.com/GitHubSecurityLab/codeql_kernel"}
 requires-python = ">=3.7"
 dependencies = [
     "metakernel >=0.24.0",
