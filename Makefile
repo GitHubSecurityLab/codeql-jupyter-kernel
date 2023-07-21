@@ -7,6 +7,7 @@ data-files: clean
 	cp codeql_kernel/images/* jupyter-data/share/jupyter/kernels/codeql/
 
 install: data-files
+	pip3 install tree_sitter
 	python3 build_treesitter.py
 	pip3 install -e ".[test]"
 
