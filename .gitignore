@@ -1,5 +1,5 @@
 jupyter-data/
-example/codeql-db/db-python/default/cache/predicates/
+example/codeql-db/db-python/default/cache/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
