@@ -1,5 +1,13 @@
 # CodeQL kernel for Jupyter
 
+A [Jupyter](http://jupyter.org/) kernel for executing CodeQL queries.
+
+![image](https://github.com/GitHubSecurityLab/codeql-jupyter-kernel/assets/125701/e5a51347-c719-490a-bfd4-060f4c2920cd)
+
+## Requirements
+- [Jupyter](https://jupyter.org/)
+- [CodeQL CLI binaries](https://github.com/github/codeql-cli-binaries)
+
 ## Local Installation 
 
 To install from a git checkout, run:
